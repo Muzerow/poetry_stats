@@ -1,7 +1,7 @@
 ---
 title: "Автоматизация синтаксического анализа"
 author: "Кирилл Мухин"
-date: "14 12 2020"
+date: "17 12 2020"
 output:
   html_document:
     code_folding: show
@@ -231,33 +231,6 @@ y
 ```
 
 Во всех нечетных - 9 слогов, а в четных - 8.
-
-```{r}
-z <- data.frame()
-
-#for (i in c(unique(y$doc_id))){
-#  y %>% filter(doc_id == i) %>% mutate(`Rel_1&2` = ifelse(
-#    !is.na(Ictus1) & y[which()]
-#  ))
-#}
-
-y %>% mutate(id_1 = ifelse(!is.na(Ictus1), token_id, NA),
-             h_id_1 = ifelse(!is.na(Ictus1), head_token_id, NA),
-             r_1 = ifelse(!is.na(Ictus1), dep_rel, NA),
-             id_2 = ifelse(!is.na(Ictus2), token_id, NA),
-             h_id_2 = ifelse(!is.na(Ictus2), head_token_id, NA),
-             r_2 = ifelse(!is.na(Ictus2), dep_rel, NA),
-             id_3 = ifelse(!is.na(Ictus3), token_id, NA),
-             h_id_3 = ifelse(!is.na(Ictus3), head_token_id, NA),
-             r_3 = ifelse(!is.na(Ictus3), dep_rel, NA),
-             id_4 = ifelse(!is.na(Ictus4), token_id, NA),
-             h_id_4 = ifelse(!is.na(Ictus4), head_token_id, NA),
-             r_4 = ifelse(!is.na(Ictus4), dep_rel, NA)) %>%
-  #dplyr::select(doc_id, Ictus1, Ictus2, Ictus3, Ictus4, HMS) %>%
-  group_by(doc_id) %>% 
-  summarise_all(funs(trimws(paste(., collapse = ''))))
-```
-
 
 # Проверка на точность результатов
 
