@@ -118,17 +118,17 @@ y <- x %>%
          Ictus4 = ifelse(v8 == position & !(upos %in% c("CCONJ","SCONJ","PART","ADP")) |
                            v8 == position & upos %in% c("CCONJ","SCONJ","PART","ADP") & str_count(str_to_lower(token), "[аеёиоуыэюя]") > 1,
                          upos, NA),
-         HMS = ifelse(v1 == position &
-                        !(upos %in% c("CCONJ","SCONJ","PART","ADP","PRON","DET")) &
+         HMS = ifelse(v1 == position & !(upos %in% c("CCONJ","SCONJ","PART","ADP","PRON","DET")) |
+                        v1 == position & upos %in% c("CCONJ","SCONJ","PART","ADP","PRON","DET") &
                         str_count(str_to_lower(token), "[аеёиоуыэюя]") > 1, "1",
-                      ifelse(v3 == position &
-                               !(upos %in% c("CCONJ","SCONJ","PART","ADP","PRON","DET")) &
+                      ifelse(v3 == position & !(upos %in% c("CCONJ","SCONJ","PART","ADP","PRON","DET")) |
+                               v3 == position & upos %in% c("CCONJ","SCONJ","PART","ADP","PRON","DET") &
                                str_count(str_to_lower(token), "[аеёиоуыэюя]") > 1, "2",
-                             ifelse(v5 == position &
-                                      !(upos %in% c("CCONJ","SCONJ","PART","ADP","PRON","DET")) &
+                             ifelse(v5 == position & !(upos %in% c("CCONJ","SCONJ","PART","ADP","PRON","DET")) |
+                                      v5 == position & upos %in% c("CCONJ","SCONJ","PART","ADP","PRON","DET") &
                                       str_count(str_to_lower(token), "[аеёиоуыэюя]") > 1, "3",
-                                    ifelse(v7 == position &
-                                             !(upos %in% c("CCONJ","SCONJ","PART","ADP","PRON","DET")) &
+                                    ifelse(v7 == position & !(upos %in% c("CCONJ","SCONJ","PART","ADP","PRON","DET")) |
+                                             v7 == position & upos %in% c("CCONJ","SCONJ","PART","ADP","PRON","DET") &
                                              str_count(str_to_lower(token), "[аеёиоуыэюя]") > 1, "4", NA)))),
          id_1 = ifelse(!is.na(Ictus1), token_id, NA),
          h_id_1 = ifelse(!is.na(Ictus1), head_token_id, NA),
