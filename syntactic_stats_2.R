@@ -15,6 +15,7 @@ args <- parse_args(parser)
 
 main <- function(args) {
   data <- read_excel(args$infile)
+  base <- sub(".xlsx", "", basename(args$infile))
   
   # частотность частей речи на каждом икте
   
@@ -41,7 +42,7 @@ main <- function(args) {
   ictus_pos <- ictus_pos[,c(1,2,3,5,4)] %>% filter(part_of_speech != "0")
   
   ictus_pos %>%
-    write.csv(paste(args$outdir, "/", "ictus_pos.csv", sep = "", collapse = ""))
+    write.csv(paste(args$outdir, "/", base, ".ictus_pos.csv", sep = "", collapse = ""))
   
   # частотность частей речи по ритмическим формам (проценты по всем ритмическим формам)
   
@@ -158,7 +159,7 @@ main <- function(args) {
     filter(part_of_speech != "0")
   
   rform_pos %>%
-    write.csv(paste(args$outdir, "/", "rform_pos_all_rf.csv", sep = "", collapse = ""))
+    write.csv(paste(args$outdir, "/", base, ".rform_pos_all_rf.csv", sep = "", collapse = ""))
   
   # частотность частей речи по ритмическим формам (проценты внутри ритмических форм)
   
@@ -305,7 +306,7 @@ main <- function(args) {
     filter(part_of_speech != "0")
   
   rform_pos_v2 %>%
-    write.csv(paste(args$outdir, "/", "rform_pos_within_rf.csv", sep = "", collapse = ""))
+    write.csv(paste(args$outdir, "/", base, ".rform_pos_within_rf.csv", sep = "", collapse = ""))
   
   # частотность частей речи
   
@@ -328,7 +329,7 @@ main <- function(args) {
                            arrange(-n))
   
   pos_freq %>%
-    write.csv(paste(args$outdir, "/", "pos_freq.csv", sep = "", collapse = ""))
+    write.csv(paste(args$outdir, "/", base, ".pos_freq.csv", sep = "", collapse = ""))
   
 }
 

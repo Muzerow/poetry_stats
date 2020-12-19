@@ -15,6 +15,7 @@ args <- parse_args(parser)
 
 main <- function(args) {
   data <- read_excel(args$infile)
+  base <- sub(".xlsx", "", basename(args$infile))
   
   # количество ударных иктов
   
@@ -29,21 +30,21 @@ main <- function(args) {
     mutate(props = non_null / (nrow(data) * 4))
   
   rbind(ictus_n, ictus_full) %>%
-    write.csv(paste(args$outdir, "/", "ictus_n.csv", sep = "", collapse = ""))
+    write.csv(paste(args$outdir, "/", base, ".ictus_n.csv", sep = "", collapse = ""))
   
   # частотность форм четырехстопного ямба
   
   rhythm_form <- data.frame(group_proportions(data, RhythmForm))
   
   rhythm_form %>%
-    write.csv(paste(args$outdir, "/", "rhythm_form.csv", sep = "", collapse = ""))
+    write.csv(paste(args$outdir, "/", base, ".rhythm_form.csv", sep = "", collapse = ""))
   
   # частотность форм четырехстопного ямба по номерам строф
   
   nos <- data.frame(group_proportions(data, NoS, RhythmForm))
   
   nos %>%
-    write.csv(paste(args$outdir, "/", "nos.csv", sep = "", collapse = ""))
+    write.csv(paste(args$outdir, "/", base, ".nos.csv", sep = "", collapse = ""))
 
 }
 
