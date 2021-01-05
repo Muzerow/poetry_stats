@@ -168,7 +168,8 @@ final_cleaning <- function(data){
     dplyr::rename(LineID = doc_id,
                   LineText = sentence) %>%
     arrange(LineID) %>%
-    left_join(mutate(data_control[,c("LineID","NoT","NoS","TextID")], LineID = as.integer(LineID)), by = "LineID")
+    mutate(LineID = as.character(LineID)) %>% 
+    left_join(data_control[,c("LineID","NoT","NoS","TextID")], by = "LineID")
   
   return(data[,c(1,19,2:5,6,20,34:36,21:32,33)])
 }
