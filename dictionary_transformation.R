@@ -11,11 +11,14 @@ parser <- add_option(parser, c("-o", "--outdir"),
                      help = "Output directory")
 args <- parse_args(parser)
 
+# Download stress data:
+# http://www.speakrus.ru/dict/all_forms.rar
+
 main <- function(args) {
   
-  stress_dict <- read_delim(args$infile, ";", escape_double = FALSE, trim_ws = TRUE) %>%
-    mutate(`а#а` = substr(`а#а`, start = str_locate(`а#а`, "#")[,1] + 1, stop = str_length(`а#а`))) %>%
-    tidytext::unnest_tokens(word, `а#а`) %>%
+  stress_dict <- read_delim(args$infile, ";", escape_double = FALSE, trim_ws = TRUE, col_names = c("stress")) %>%
+    mutate(stress = substr(stress, start = str_locate(stress, "#")[,1] + 1, stop = str_length(stress))) %>%
+    tidytext::unnest_tokens(word, stress) %>%
     dplyr::rename(stress = word) %>%
     mutate(stress = ifelse(str_detect(stress, "'") == TRUE, stress,
                            str_c(stress, "'")),
