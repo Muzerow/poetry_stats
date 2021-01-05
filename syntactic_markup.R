@@ -7,23 +7,18 @@ library(tidyverse)
 library(openxlsx)
 library(optparse)
 
-#parser <- OptionParser()
-#parser <- add_option(parser, c("-i", "--infile"),
-#                     help = "Input file")
-#parser <- add_option(parser, c("-o", "--outdir"), 
-#                     help = "Output directory")
-#parser <- add_option(parser, c("-d", "--dictionary"), 
-#                     help = "Stress dictionary")
-#parser <- add_option(parser, c("-m", "--model"), 
-#                     help = "Udpipe model")
-#args <- parse_args(parser)
+parser <- OptionParser()
+parser <- add_option(parser, c("-i", "--infile"),
+                     help = "Input file")
+parser <- add_option(parser, c("-o", "--outdir"), 
+                     help = "Output directory")
+parser <- add_option(parser, c("-d", "--dictionary"), 
+                     help = "Stress dictionary")
+parser <- add_option(parser, c("-m", "--model"), 
+                     help = "Udpipe model")
+args <- parse_args(parser)
 
-stress_dict <- read.csv("zaliznyak_all_forms.csv")
-data <- read_excel("Table2_All_Lines_Test.xlsx")
-data_control <- data
-udmodel <- udpipe_load_model(file = "russian-syntagrus-ud-2.5-191206.udpipe")
-
-# применяем модель udpipe к данным, оставляем необходимые колонки
+## Применяем модель udpipe к данным, оставляем необходимые колонки и сохраняем копию данных, чтобы потом присоединить оттуда тексты строк
 
 udpipe_preprocess <- function(data) {
   data <- udpipe(data$LineText, object = udmodel) %>%
@@ -34,22 +29,22 @@ udpipe_preprocess <- function(data) {
   assign("data_ud", data, envir = globalenv())
 }
 
-# находим позиции гласных букв в строках
+## Находим позиции гласных букв в строках
 
 vowels_position <- function(data){
   for(i in 1:9){
     if (i == 1) {
-      data <- data %>% mutate(v1 = regexpr('[аеёиоуыэюя]', str_to_lower(sentence)),
+      data <- data %>% mutate(v1 = regexpr('[аеёиоуыэюяaeiou]', str_to_lower(sentence)),
                               t1 = str_to_lower(substr(data$sentence, start = v1 + 1, stop = str_length(sentence))))
     } else {
       data <- data %>% mutate(!!paste0("v",i) := ifelse(!!sym(paste0("v",i-1)) %in% c(-1,0), -1,
                                                         ifelse(!!sym(paste0("t",i-1)) == "", -1,
-                                                               regexpr('[аеёиоуыэюя]', !!sym(paste0("t",i-1))) + !!sym(paste0("v",i-1)))),
+                                                               regexpr('[аеёиоуыэюяaeiou]', !!sym(paste0("t",i-1))) + !!sym(paste0("v",i-1)))),
                               !!paste0("t",i) := ifelse(!!sym(paste0("t",i-1)) == "", "",
                                                         ifelse(str_detect(substr(!!sym(paste0("t",i-1)),
                                                                                  start = !!sym(paste0("v",i)) - !!sym(paste0("v",i-1)) + 1,
                                                                                  stop = str_length(!!sym(paste0("t",i-1)))),
-                                                                          '[аеёиоуыэюя]') == FALSE, "",
+                                                                          '[аеёиоуыэюяaeiou]') == FALSE, "",
                                                                substr(!!sym(paste0("t",i-1)),
                                                                       start = !!sym(paste0("v",i)) - !!sym(paste0("v",i-1)) + 1,
                                                                       stop = str_length(!!sym(paste0("t",i-1)))))))
@@ -58,7 +53,7 @@ vowels_position <- function(data){
   return(data)
 }
 
-# добавляем словарь и создаем колонку с ударением
+## Добавляем словарь и создаем колонку с ударением
 
 stress_dict_join <- function(data){
   data %>%
@@ -66,7 +61,7 @@ stress_dict_join <- function(data){
     mutate(position = regexpr("[`'`]", stress) + start - 2)
 }
 
-# определяем, находятся ли слова на ударных позициях, вписываем часть речи в икты
+## Определяем, находятся ли слова на ударных позициях, вписываем часть речи в колонки Ictus
 
 ictus_create <- function(data){
   for(i in 1:4){
@@ -79,7 +74,7 @@ ictus_create <- function(data){
   return(data)
 }
 
-# создаем колонку hms
+## Создаем колонку HMS
 
 hms_create <- function(data){
   data$HMS = NA
@@ -94,7 +89,7 @@ hms_create <- function(data){
   return(data)
 }
 
-# создаем колонки с id слова, id главного слова и связью между ними
+## Создаем колонки с id слова, id главного слова и связью между ними
 
 word_rel_preparation <- function(data){
   for(i in 1:4){
@@ -106,7 +101,7 @@ word_rel_preparation <- function(data){
   return(data)
 }
 
-# оставляем нужные колонки, объединяем результаты предыдущих функций для каждой строки
+## Оставляем только нужные колонки, объединяем результаты предыдущих функций для каждой строки
 
 join_results <- function(data){
   data %>%
@@ -115,7 +110,7 @@ join_results <- function(data){
     summarise_all(funs(trimws(paste(., collapse = ''))))
 }
 
-# чистим колонки от образовавшихся na внутри строк и заменяем пустые на na
+## Чистим колонки от образовавшихся na внутри строк и заменяем пустые на NA
 
 na_replace <- function(data){
   data %>%
@@ -123,16 +118,18 @@ na_replace <- function(data){
     mutate_all(funs(ifelse(. == "", "0", .)))
 }
 
-# присоединяем сами строки по doc_id
+## Присоединяем сами строки по doc_id
 
 text_join <- function(data){
   data %>% left_join((data_ud %>%
-                        dplyr::count(doc_id, sentence) %>%
-                        dplyr::select(-n)),
+                        select(doc_id, sentence) %>% 
+                        distinct() %>%
+                        group_by(doc_id) %>%
+                        summarise(sentence = paste(sentence, collapse = ' '))),
                      by = c("doc_id"))
 }
 
-# создаем колонку с ритмическими формами
+## Создаем колонку с ритмическими формами
 
 rhythm_form_create <- function(data){
   data %>% mutate(RhythmForm = ifelse(Ictus1 != "0" & Ictus2 != "0" & Ictus3 != "0" & Ictus4 != "0", "1",
@@ -145,7 +142,7 @@ rhythm_form_create <- function(data){
                                                                                 ifelse(Ictus1 == "0" & Ictus2 == "0" & Ictus3 == "0" & Ictus4 != "0", "8", NA)))))))))
 }
 
-# создаем колонки со взаимосвязями между словами на ударных позициях
+## Создаем колонки со взаимосвязями между словами на ударных позициях
 
 relations_create <- function(data){
   for(i in list(c(1,2),c(2,1),c(1,3),c(3,1),c(1,4),c(4,1),c(2,3),c(3,2),c(2,4),c(4,2),c(3,4),c(4,3))){
@@ -162,7 +159,7 @@ relations_create <- function(data){
   return(data)
 }
 
-# финальная чистка и добавление исходных колонок not, nos и textid
+## Финальная чистка и добавление исходных колонок NoT, NoS и TextID
 
 final_cleaning <- function(data){
   data <- data %>%
@@ -175,6 +172,17 @@ final_cleaning <- function(data){
   
   return(data[,c(1,19,2:5,6,20,34:36,21:32,33)])
 }
+
+# Загрузка данных
+
+data <- read_excel(args$infile)
+data_control <- data
+base <- sub(".xlsx", "", basename(args$infile))
+
+stress_dict <- read.csv(args$dictionary)
+udmodel <- udpipe_load_model(file = args$model)
+
+# Применение функций
 
 data %>%
   udpipe_preprocess() %>%
@@ -189,6 +197,6 @@ data %>%
   rhythm_form_create() %>%
   relations_create() %>%
   final_cleaning() %>%
-  write.xlsx("markup.xlsx")
+  write.csv(paste(args$outdir, "/", base, ".markup.csv", sep = "", collapse = ""))
 
 
